@@ -1,0 +1,9 @@
+## Interface: 70000
+## Title: Baastaard Mounts
+## Author: Bstrd-WyrmrestAccord
+## SavedVariables: BstrdMountsDB
+## Version: 1.0
+
+embeds.xml
+
+Bstrd_Mounts.lua
