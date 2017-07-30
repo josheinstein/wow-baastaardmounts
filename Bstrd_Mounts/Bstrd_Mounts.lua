@@ -18,18 +18,28 @@ local defaults = {
     }
 }
 
+-- cleans a string by trimming leading/trailing spaces and converting
+-- empty strings to nil
+function s(str)
+    if str and str:len() > 0 then str = str:gsub("^%s*(.-)%s*$", "%1") end
+    if str and str:len() > 0 then
+		return str
+    end
+end
+
 -- Called when the addon is initialized
 function BM:OnInitialize()
 
     self.db = LibStub("AceDB-3.0"):New("BstrdMountsDB", defaults)
     
     -- Register /mountup slash command
-    BM:RegisterChatCommand("mountup", "Handle_MountUp")
-    BM:RegisterChatCommand("setmount", "Handle_SetMount")
-    BM:RegisterChatCommand("setgroundmount", "Handle_SetGroundMount")
-    BM:RegisterChatCommand("setswimmingmount", "Handle_SetSwimmingMount")
-    BM:RegisterChatCommand("setflyingmount", "Handle_SetFlyingMount")
-    BM:RegisterChatCommand("setcontinentmount", "Handle_SetContinentMount")
+    BM:RegisterChatCommand("mountup", "Handle_MountUp")                         -- calls up a mount for this zone
+    BM:RegisterChatCommand("setmount", "Handle_SetMount")                       -- sets zone mount
+    BM:RegisterChatCommand("setgroupmount", "Handle_SetGroupMount")				-- sets character's default mount when grouped
+    BM:RegisterChatCommand("setgroundmount", "Handle_SetGroundMount")           -- sets character's default ground mount
+    BM:RegisterChatCommand("setswimmingmount", "Handle_SetSwimmingMount")       -- sets character's default swimming mount
+    BM:RegisterChatCommand("setflyingmount", "Handle_SetFlyingMount")           -- sets character's default flying mount
+    BM:RegisterChatCommand("setcontinentmount", "Handle_SetContinentMount")     -- sets a default mount for continent
 
 end
 
@@ -47,37 +57,38 @@ function BM:Handle_MountUp()
         
     elseif IsOutdoors() then
     
+        -- if player is under level 20, always attempt to use the heirloom mount
         if playerLevel < 20 then
             
             mountName = "Summon Chauffeur"
             
         else
 
-            if IsSwimming() then mountName = mountDB["Swimming"] end
-            if IsFalling() then mountName = mountDB["Falling"] end
+			-- if player is grouped and a group mount is defined, that
+			-- will take precedence over the others
+			if not mountName and IsInGroup() then mountName = s(mountDB["Group"]) end
+
+            -- if a swimming mount is defined and we are swimming, that
+            -- will take priority over the other defined mounts
+            if not mountName and IsSwimming() then mountName = s(mountDB["Swimming"]) end
 
             if mountDB[continent] then
-                if not mountName then mountName = mountDB[continent][zoneText] end
-                if not mountName then
-                    if IsFlyableArea() then
-                        mountName = mountDB[continent]["Flying"]
-                    else
-                        mountName = mountDB[continent]["Ground"]
-                    end
-                end
-                if not mountName then mountName = mountDB[continent]["Default"] end
+                -- try to use a zone-specific mount if one is configured
+                if not mountName then mountName = s(mountDB[continent][zoneText]) end
+                -- if there is no zone-specific mount, try a continent-specific mount
+                if not mountName then mountName = s(mountDB[continent]["Default"]) end
             end
 
+            -- if there is no zone or continent specific mount, use a
+            -- default mounts for this character, ground or flying
             if not mountName then
                 if IsFlyableArea() then
-                    mountName = mountDB["Flying"]
+                    mountName = s(mountDB["Flying"])
                 else
-                    mountName = mountDB["Ground"]
+                    mountName = s(mountDB["Ground"])
                 end
             end
             
-            if not mountName then mountName = nil end
-
         end
 
     end
@@ -92,6 +103,11 @@ function BM:Handle_MountUp()
         
     end
 
+end
+
+-- Called when /setgroupmount slash command is used
+function BM:Handle_SetGroupMount(mountName) 
+    BM:SetMount(nil, "Group", mountName)
 end
 
 -- Called when /setflyingmount slash command is used
@@ -123,37 +139,15 @@ function BM:Handle_SetMount(mountName)
 
     BM:SetMount(continent, zoneText, mountName)
 
---[[    -- make sure there's a table for the continent
-    -- otherwise create a new one
-    if not self.db.profile[continent] then
-        self.db.profile[continent] = {}
-    end
-
-    if mountName and mountName:len() > 0 then
-        
-        -- make sure we can use the mount
-        local spellName, spellRank, spellIcon, castingTime, minRange, maxRange, spellID = GetSpellInfo(mountName)
-        if spellName then
-            -- set up new zone mount mapping
-            self.db.profile[continent][zoneText] = spellName
-        else
-            BM:Printf("Unknown mount: [%i] %s", spellID, mountName)
-        end
-
-    else
-        -- clears out an existing mount mapping
-        mountName = self.db.profile[continent][zoneText]
-        if mountName and string.len(mountName) then
-            BM:Printf("Clearing zone mount: %s", mountName)
-            self.db.profile[continent][zoneText] = nil
-        end
-    end
-]]
 end
 
 function BM:SetMount(continent, zoneOrScenario, mountName) 
 
     local mountDB = self.db.profile
+
+    continent = s(continent)
+    zoneOrScenario = s(zoneOrScenario)
+    mountName = s(mountName)
 
     -- If a continent was specified, we will use that continent as the mountDB.
     -- First make sure a table exists for the given continent. If not, create one.
@@ -164,11 +158,11 @@ function BM:SetMount(continent, zoneOrScenario, mountName)
         mountDB = mountDB[continent]
     end
 
-    if not (zoneOrScenario and zoneOrScenario:len()) then
+    if not zoneOrScenario then
         zoneOrScenario = "Default"
     end
 
-    if mountName and mountName:len() > 0 then
+    if mountName then
 
         -- make sure we can use the mount
         local spellName, spellRank, spellIcon, castingTime, minRange, maxRange, spellID = GetSpellInfo(mountName)
@@ -182,8 +176,8 @@ function BM:SetMount(continent, zoneOrScenario, mountName)
 
     else
         -- clears out an existing mount mapping
-        mountName = mountDB[zoneOrScenario]
-        if mountName and mountName:len() then
+        mountName = s(mountDB[zoneOrScenario])
+        if mountName then
             BM:Printf("Clearing zone mount: %s", mountName)
             mountDB[zoneOrScenario] = nil
         end
@@ -191,22 +185,6 @@ function BM:SetMount(continent, zoneOrScenario, mountName)
 
 end
 
-function BM:IsUsableMount(mountName)
-
-    -- trim leading and trailing spaces
-    if mountName then mountName = mountName:gsub("^%s*(.-)%s*$", "%1") end
-
-    if mountName and mountName:len() then
-        -- make sure we can use the mount
-        local spellName, spellRank, spellIcon, castingTime, minRange, maxRange, spellID = GetSpellInfo(mountName)
-        if spellName then
-            return true
-        end
-    end
-    
-    return false
-
-end
 
 -- Export global addon object which can be referenced by
 -- other Lua scripts in the addon.
