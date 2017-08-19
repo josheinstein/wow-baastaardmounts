@@ -23,7 +23,7 @@ local defaults = {
 function BM:OnInitialize()
 
     self.db = LibStub("AceDB-3.0"):New("BstrdMountsDB", defaults)
-    
+
     -- Register /mountup slash command
     BM:RegisterChatCommand("mountup", "Handle_MountUp")                         -- calls up a mount for this zone
     BM:RegisterChatCommand("setmount", "Handle_SetMount")                       -- sets zone mount
@@ -33,6 +33,58 @@ function BM:OnInitialize()
     BM:RegisterChatCommand("setflyingmount", "Handle_SetFlyingMount")           -- sets character's default flying mount
     BM:RegisterChatCommand("setcontinentmount", "Handle_SetContinentMount")     -- sets a default mount for continent
 
+    BM:RegisterEvent("ADDON_LOADED")
+
+end
+
+function BM:ADDON_LOADED(event, addon)
+    if (addon == "Blizzard_Collections") then
+        hooksecurefunc(MountJournal.mountOptionsMenu, "initialize", function(sender, level) UIDropDownMenu_InitializeHelper(sender) BM:Handle_MountOptionsMenuInit(sender,level) end)    
+    end
+end
+
+function BM:Handle_MountOptionsMenuInit(sender,level)
+
+    local menu1 = UIDropDownMenu_CreateInfo()
+    menu1.notCheckable = true
+    menu1.text = "Set as Zone Mount"
+    menu1.func = function()
+        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
+        BM:Handle_SetMount(mountName)
+    end
+    
+    UIDropDownMenu_AddButton(menu1, level)
+    
+    local menu2 = UIDropDownMenu_CreateInfo()
+    menu2.notCheckable = true
+    menu2.text = "Set as Continent Mount"
+    menu2.func = function()
+        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
+        BM:Handle_SetContinentMount(mountName)
+    end
+    
+    UIDropDownMenu_AddButton(menu2, level)
+    
+    local menu3 = UIDropDownMenu_CreateInfo()
+    menu3.notCheckable = true
+    menu3.text = "Set as Default Ground Mount"
+    menu3.func = function()
+        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
+        BM:Handle_SetGroundMount(mountName)
+    end
+    
+    UIDropDownMenu_AddButton(menu3, level)
+    
+    local menu4 = UIDropDownMenu_CreateInfo()
+    menu4.notCheckable = true
+    menu4.text = "Set as Default Flying Mount"
+    menu4.func = function()
+        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
+        BM:Handle_SetFlyingMount(mountName)
+    end
+    
+    UIDropDownMenu_AddButton(menu4, level)
+    
 end
 
 -- Called when /mountup slash command is used
@@ -56,9 +108,9 @@ function BM:Handle_MountUp()
             
         else
 
-			-- if player is grouped and a group mount is defined, that
-			-- will take precedence over the others
-			if not mountName and IsInGroup() then mountName = s(mountDB["Group"]) end
+            -- if player is grouped and a group mount is defined, that
+            -- will take precedence over the others
+            if not mountName and IsInGroup() then mountName = s(mountDB["Group"]) end
 
             -- if a swimming mount is defined and we are swimming, that
             -- will take priority over the other defined mounts
@@ -180,7 +232,7 @@ end
 function s(str)
     if str and str:len() > 0 then str = str:gsub("^%s*(.-)%s*$", "%1") end
     if str and str:len() > 0 then
-		return str
+        return str
     end
 end
 
