@@ -8,6 +8,7 @@ local BM = LibStub("AceAddon-3.0"):NewAddon("Bstrd_Mounts")
 LibStub("AceConsole-3.0"):Embed(BM)
 LibStub("AceComm-3.0"):Embed(BM)
 LibStub("AceEvent-3.0"):Embed(BM)
+LibStub("AceHook-3.0"):Embed(BM)
 
 local playerName = UnitName("player")
 local playerFaction,playerFactionName = UnitFactionGroup("player")
@@ -17,15 +18,6 @@ local defaults = {
     profile = {
     }
 }
-
--- cleans a string by trimming leading/trailing spaces and converting
--- empty strings to nil
-function s(str)
-    if str and str:len() > 0 then str = str:gsub("^%s*(.-)%s*$", "%1") end
-    if str and str:len() > 0 then
-		return str
-    end
-end
 
 -- Called when the addon is initialized
 function BM:OnInitialize()
@@ -181,6 +173,15 @@ function BM:SetMount(continent, zoneOrScenario, mountName)
         end
     end
 
+end
+
+-- cleans a string by trimming leading/trailing spaces and converting
+-- empty strings to nil
+function s(str)
+    if str and str:len() > 0 then str = str:gsub("^%s*(.-)%s*$", "%1") end
+    if str and str:len() > 0 then
+		return str
+    end
 end
 
 
