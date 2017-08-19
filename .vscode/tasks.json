@@ -11,7 +11,9 @@
                 "args": [
                     "${workspaceRoot}\\Bstrd_Mounts",
                     "${env:ProgramFiles(x86)}\\World of Warcraft\\Interface\\AddOns\\Bstrd_Mounts",
-                    "/MIR"
+                    "/MIR",
+                    "/NFL",
+                    "/NDL"
                 ]
             },
             "presentation": {
