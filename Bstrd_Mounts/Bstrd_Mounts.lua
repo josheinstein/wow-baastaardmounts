@@ -95,9 +95,7 @@ function BM:Handle_MountUp()
 
     if mountName then
 
-        BM:Printf("In Continent : %s", continent)
-        BM:Printf("In Zone : %s", zoneText)
-        BM:Printf("Will Use : %s", mountName)
+        BM:Printf("[%s] %s: %s", continent, zoneText, mountName)
 
         CastSpellByName(mountName)
         
