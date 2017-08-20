@@ -20,9 +20,10 @@ and type the following:
 	/MountUp
 
 That's it. Save it and drag it to your action bars somewhere that you can easily
-click it or keybind it. Clicking the button will call up your preferred mounts when
-you are in a particular zone or situation, which you will set up next. If you are
-already mounted, it will dismount you.
+click it or keybind it. It won't do anything yet (because you haven't set up
+your default mount), but once you have, this button will call up your preferred
+mounts when you are in a particular zone or situation, which you will set up next.
+If you are already mounted, it will dismount you.
 
 ## Setting mount preferences
 
@@ -32,7 +33,7 @@ class mount in New Dalaran, be in New Dalaran and type the following:
 
     /SetMount Archmage's Prismatic Disc
 
-You can also set a zone for the entire "continent" that you're presently in.
+You can also set a mount for the entire "continent" that you're presently in.
 
 	/SetContinentMount Arcanist's Manasaber
 
