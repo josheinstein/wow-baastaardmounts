@@ -11,12 +11,12 @@ LibStub("AceEvent-3.0"):Embed(BM)
 LibStub("AceHook-3.0"):Embed(BM)
 
 local playerName = UnitName("player")
+local playerClass,playerClassName,playerClassID = UnitClass("player")
 local playerFaction,playerFactionName = UnitFactionGroup("player")
 local playerLevel = UnitLevel("player")
 
 local defaults = {
-    profile = {
-    }
+    profile = { ["Heirloom"] = "Summon Chauffeur" }
 }
 
 -- Called when the addon is initialized
@@ -29,62 +29,11 @@ function BM:OnInitialize()
     BM:RegisterChatCommand("setmount", "Handle_SetMount")                       -- sets zone mount
     BM:RegisterChatCommand("setgroupmount", "Handle_SetGroupMount")				-- sets character's default mount when grouped
     BM:RegisterChatCommand("setgroundmount", "Handle_SetGroundMount")           -- sets character's default ground mount
-    BM:RegisterChatCommand("setswimmingmount", "Handle_SetSwimmingMount")       -- sets character's default swimming mount
+    BM:RegisterChatCommand("setonwatermount", "Handle_SetOnWaterMount")         -- sets character's default on-water mount
+    BM:RegisterChatCommand("setunderwatermount", "Handle_SetUnderwaterMount")   -- sets character's default under-water mount
     BM:RegisterChatCommand("setflyingmount", "Handle_SetFlyingMount")           -- sets character's default flying mount
     BM:RegisterChatCommand("setcontinentmount", "Handle_SetContinentMount")     -- sets a default mount for continent
 
-    BM:RegisterEvent("ADDON_LOADED")
-
-end
-
-function BM:ADDON_LOADED(event, addon)
-    if (addon == "Blizzard_Collections") then
-        hooksecurefunc(MountJournal.mountOptionsMenu, "initialize", function(sender, level) UIDropDownMenu_InitializeHelper(sender) BM:Handle_MountOptionsMenuInit(sender,level) end)    
-    end
-end
-
-function BM:Handle_MountOptionsMenuInit(sender,level)
-
-    local menu1 = UIDropDownMenu_CreateInfo()
-    menu1.notCheckable = true
-    menu1.text = "Set as Zone Mount"
-    menu1.func = function()
-        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
-        BM:Handle_SetMount(mountName)
-    end
-    
-    UIDropDownMenu_AddButton(menu1, level)
-    
-    local menu2 = UIDropDownMenu_CreateInfo()
-    menu2.notCheckable = true
-    menu2.text = "Set as Continent Mount"
-    menu2.func = function()
-        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
-        BM:Handle_SetContinentMount(mountName)
-    end
-    
-    UIDropDownMenu_AddButton(menu2, level)
-    
-    local menu3 = UIDropDownMenu_CreateInfo()
-    menu3.notCheckable = true
-    menu3.text = "Set as Default Ground Mount"
-    menu3.func = function()
-        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
-        BM:Handle_SetGroundMount(mountName)
-    end
-    
-    UIDropDownMenu_AddButton(menu3, level)
-    
-    local menu4 = UIDropDownMenu_CreateInfo()
-    menu4.notCheckable = true
-    menu4.text = "Set as Default Flying Mount"
-    menu4.func = function()
-        local mountName = tostring(C_MountJournal.GetDisplayedMountInfo(MountJournal.menuMountIndex))
-        BM:Handle_SetFlyingMount(mountName)
-    end
-    
-    UIDropDownMenu_AddButton(menu4, level)
-    
 end
 
 -- Called when /mountup slash command is used
@@ -114,7 +63,13 @@ function BM:Handle_MountUp()
 
             -- if a swimming mount is defined and we are swimming, that
             -- will take priority over the other defined mounts
-            if not mountName and IsSwimming() then mountName = s(mountDB["Swimming"]) end
+            if not mountName and IsSubmerged() then
+                if GetMirrorTimerInfo(2)=="BREATH" then
+                    mountName = s(mountDB["Underwater"])
+                else
+                    mountName = s(mountDB["Swimming"])                    
+                end
+            end
 
             if mountDB[continent] then
                 -- try to use a zone-specific mount if one is configured
@@ -130,6 +85,12 @@ function BM:Handle_MountUp()
                     mountName = s(mountDB["Flying"])
                 else
                     mountName = s(mountDB["Ground"])
+                end
+            end
+            
+            if not mountName then
+                if playerClassName == "DRUID" and playerLevel >= 18 then
+                    mountName = "Travel Form"
                 end
             end
             
@@ -162,9 +123,14 @@ function BM:Handle_SetGroundMount(mountName)
     BM:SetMount(nil, "Ground", mountName)
 end
 
--- Called when /setswimmingmount slash command is used
-function BM:Handle_SetSwimmingMount(mountName) 
+-- Called when /setonwatermount slash command is used
+function BM:Handle_SetOnWaterMount(mountName) 
     BM:SetMount(nil, "Swimming", mountName)
+end
+
+-- Called when /setunderwatermount slash command is used
+function BM:Handle_SetUnderwaterMount(mountName) 
+    BM:SetMount(nil, "Underwater", mountName)
 end
 
 -- Called when /setcontinentmount slash command is used

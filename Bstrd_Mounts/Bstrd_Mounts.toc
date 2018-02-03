@@ -1,7 +1,6 @@
 ## Interface: 70000
 ## Title: Baastaard Mounts
 ## Author: Bstrd-WyrmrestAccord
-## Dependencies: Blizzard_Collections
 ## SavedVariables: BstrdMountsDB
 ## Version: 1.0
 
