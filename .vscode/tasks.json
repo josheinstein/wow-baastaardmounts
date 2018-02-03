@@ -4,7 +4,7 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "taskName": "Copy to WoW",
+            "label": "Copy to WoW (Default Location)",
             "type": "process",
             "windows": {
                 "command": "robocopy.exe",
@@ -25,7 +25,33 @@
             "group": {
                 "kind": "build",
                 "isDefault": true
-            }
+            },
+            "problemMatcher": []
+        },
+        {
+            "label": "Copy to WoW (D:)",
+            "type": "process",
+            "windows": {
+                "command": "robocopy.exe",
+                "args": [
+                    "${workspaceRoot}\\Bstrd_Mounts",
+                    "D:\\Program Files (x86)\\World of Warcraft\\Interface\\AddOns\\Bstrd_Mounts",
+                    "/MIR",
+                    "/NFL",
+                    "/NDL"
+                ]
+            },
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": false,
+                "panel": "dedicated"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": []
         }
     ]
 }
