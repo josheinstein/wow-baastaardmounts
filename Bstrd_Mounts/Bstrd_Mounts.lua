@@ -26,6 +26,7 @@ function BM:OnInitialize()
 
     -- Register /mountup slash command
     BM:RegisterChatCommand("mountup", "Handle_MountUp")                         -- calls up a mount for this zone
+    BM:RegisterChatCommand("mogmount", function () BM:UseMount("Transmog", "Grand Expedition Yak") end)
     BM:RegisterChatCommand("debugmounts", "Handle_DebugMounts")                 -- lists the current situations and the mounts set for them
     BM:RegisterChatCommand("setmount", "Handle_SetMount")                       -- sets zone mount
     BM:RegisterChatCommand("setgroupmount", "Handle_SetGroupMount")				-- sets character's default mount when grouped
@@ -42,11 +43,12 @@ function BM:GetCurrentSituation()
     local continent = CurrentContinentName()
     local zone = CurrentZoneName()
     local situation = {}
+    local playerLevel = UnitLevel("player")
 
     if IsOutdoors() then
     
         -- if player is under level 20, always attempt to use the heirloom mount
-        if UnitLevel("player") < 20 then
+        if playerLevel < 20 then
             
             table.insert( situation, "Heirloom" )
             
@@ -73,7 +75,7 @@ function BM:GetCurrentSituation()
 
             -- if there is no zone or continent specific mount, use a
             -- default mounts for this character, ground or flying
-            if IsFlyableArea() then
+            if (IsFlyableArea() and playerLevel >= 60) then
                 table.insert( situation, "Flying" )
             else
                 table.insert( situation, "Ground" )
@@ -105,8 +107,7 @@ function BM:Handle_MountUp()
         for i,s in ipairs(situation) do
             local mountName = mountDB[s]
             if mountName then
-                BM:Printf("[%s] %s", s, mountName)
-                CastSpellByName(mountName)
+                BM:UseMount(s, mountName)
                 return
             end
             
@@ -116,6 +117,11 @@ function BM:Handle_MountUp()
     
     end
 
+end
+
+function BM:UseMount(situation, mountName)
+    BM:Printf("[%s] %s", situation, mountName)
+    CastSpellByName(mountName)
 end
 
 -- Called when /debugmounts slash command is used
