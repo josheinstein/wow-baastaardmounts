@@ -26,7 +26,6 @@ function BM:OnInitialize()
 
     -- Register /mountup slash command
     BM:RegisterChatCommand("mountup", "Handle_MountUp")                         -- calls up a mount for this zone
-    BM:RegisterChatCommand("mogmount", function () BM:UseMount("Transmog", "Grand Expedition Yak") end)
     BM:RegisterChatCommand("debugmounts", "Handle_DebugMounts")                 -- lists the current situations and the mounts set for them
     BM:RegisterChatCommand("setmount", "Handle_SetMount")                       -- sets zone mount
     BM:RegisterChatCommand("setgroupmount", "Handle_SetGroupMount")				-- sets character's default mount when grouped
@@ -35,6 +34,7 @@ function BM:OnInitialize()
     BM:RegisterChatCommand("setunderwatermount", "Handle_SetUnderwaterMount")   -- sets character's default under-water mount
     BM:RegisterChatCommand("setflyingmount", "Handle_SetFlyingMount")           -- sets character's default flying mount
     BM:RegisterChatCommand("setcontinentmount", "Handle_SetContinentMount")     -- sets a default mount for continent
+    BM:RegisterChatCommand("setshiftmount", "Handle_SetShiftMount")             -- sets a default mount when shift is held
 
 end
 
@@ -54,6 +54,12 @@ function BM:GetCurrentSituation()
             
         else
 
+            -- if the shift key is being held while activating the
+            -- mount command, then use the shift mount
+            if IsShiftKeyDown() then
+                table.insert( situation, "Shift" )
+            end
+            
             -- if player is grouped and a group mount is defined, that
             -- will take precedence over the others
             if IsInGroup() then
@@ -65,6 +71,12 @@ function BM:GetCurrentSituation()
             if IsSubmerged() then
                 if GetMirrorTimerInfo(2)=="BREATH" then
                     table.insert( situation, "Underwater" )
+                elseif IsShiftKeyDown() then
+                    -- special case for shift key
+                    -- if in the water, shift will control whether we use the in/on
+                    -- water mount, and not use the assigned shift mount
+                    table.insert( situation, "Swimming" )
+                    RemoveFromTable( situation, "Shift" )
                 end
                 table.insert( situation, "Swimming" )
             end
@@ -77,9 +89,9 @@ function BM:GetCurrentSituation()
             -- default mounts for this character, ground or flying
             if (IsFlyableArea() and playerLevel >= 60) then
                 table.insert( situation, "Flying" )
-            else
-                table.insert( situation, "Ground" )
             end
+            
+            table.insert( situation, "Ground" )
 
         end
 
@@ -181,6 +193,11 @@ function BM:Handle_SetContinentMount(mountName)
     BM:SetMount(MakeZoneKey(continent), mountName)
 end
 
+-- Called when /setshiftmount slash command is used
+function BM:Handle_SetShiftMount(mountName) 
+    BM:SetMount("Shift", mountName)
+end
+
 -- Called when /setmount slash command is used
 function BM:Handle_SetMount(mountName) 
 
@@ -219,6 +236,7 @@ function BM:SetMount(situation, mountName)
 end
 
 function CurrentContinentName()
+    SetMapToCurrentZone()
     return GetContinentName(GetCurrentMapContinent()) or "World"
 end
 
@@ -244,6 +262,14 @@ function IsNullOrWhiteSpace(str)
         return true
     end
 end
+
+function RemoveFromTable(tbl, str)
+    for i, v in ipairs(tbl) do
+        if v == str then
+            return table.remove(tbl, i)
+        end
+    end
+end  
 
 -- Export global addon object which can be referenced by
 -- other Lua scripts in the addon.
