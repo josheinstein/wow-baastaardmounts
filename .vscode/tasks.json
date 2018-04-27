@@ -27,7 +27,7 @@
                 "isDefault": true
             },
             "problemMatcher": []
-        },
+        }/* ,
         {
             "label": "Copy to WoW (D:)",
             "type": "process",
@@ -52,6 +52,6 @@
                 "isDefault": true
             },
             "problemMatcher": []
-        }
+        } */
     ]
 }
