@@ -75,7 +75,7 @@ function BM:GetCurrentSituation()
                     -- special case for shift key
                     -- if in the water, shift will control whether we use the in/on
                     -- water mount, and not use the assigned shift mount
-                    table.insert( situation, "Swimming" )
+                    table.insert( situation, "Underwater" )
                     RemoveFromTable( situation, "Shift" )
                 end
                 table.insert( situation, "Swimming" )
@@ -236,12 +236,29 @@ function BM:SetMount(situation, mountName)
 end
 
 function CurrentContinentName()
-    SetMapToCurrentZone()
-    return GetContinentName(GetCurrentMapContinent()) or "World"
+
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local mapInfo = C_Map.GetMapInfo(mapID)
+
+    while (mapInfo.mapType > 2) do
+        mapInfo = C_Map.GetMapInfo(mapInfo.parentMapID)
+    end
+
+    if (mapInfo.mapType == 2) then
+        return mapInfo.name
+    end
+
+    return "World"
+
 end
 
 function CurrentZoneName()
-    return GetZoneText()
+
+    local mapID = C_Map.GetBestMapForUnit("player")
+    local mapInfo = C_Map.GetMapInfo(mapID)
+
+    return mapInfo.name
+
 end
 
 function MakeZoneKey(continent, zone)
