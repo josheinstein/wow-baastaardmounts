@@ -240,11 +240,11 @@ function CurrentContinentName()
     local mapID = C_Map.GetBestMapForUnit("player")
     local mapInfo = C_Map.GetMapInfo(mapID)
 
-    while (mapInfo.mapType > 2) do
+    while (mapInfo and mapInfo.mapType > 2) do
         mapInfo = C_Map.GetMapInfo(mapInfo.parentMapID)
     end
 
-    if (mapInfo.mapType == 2) then
+    if (mapInfo and mapInfo.mapType == 2) then
         return mapInfo.name
     end
 
